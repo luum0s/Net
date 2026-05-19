@@ -1,0 +1,65 @@
+# 自愈规则与风险评估策略
+risk_levels:
+  low:
+    auto_execute: true
+    human_confirm: false
+    rollback_timeout: 300  # 5分钟自动回滚
+
+  medium:
+    auto_execute: true
+    human_confirm: false
+    rollback_timeout: 180  # 3分钟自动回滚
+
+  high:
+    auto_execute: false
+    human_confirm: true
+    rollback_timeout: 60   # 1分钟自动回滚
+
+# 自愈规则库
+healing_rules:
+  - id: RULE-001
+    name: "端口环路自动隔离"
+    condition: "port_status == err-disabled AND mac_count > 50"
+    diagnosis_chain:
+      - "check_port_security"
+      - "check_stp_status"
+      - "check_mac_table"
+    action: "shutdown_interface"
+    risk_level: low
+    affected_scope: single_port
+
+  - id: RULE-002
+    name: "BGP邻居中断自动切换"
+    condition: "bgp_peer_state != Established AND backup_path_exists"
+    diagnosis_chain:
+      - "check_bgp_peer"
+      - "check_routing_table"
+      - "check_backup_path"
+    action: "activate_backup_route"
+    risk_level: medium
+    affected_scope: single_peer
+
+  - id: RULE-003
+    name: "ACL违规流量阻断"
+    condition: "traffic_anomaly_score > 0.9"
+    diagnosis_chain:
+      - "analyze_netflow"
+      - "check_acl_rules"
+      - "identify_source"
+    action: "apply_emergency_acl"
+    risk_level: high
+    affected_scope: subnet
+
+# 合规基线
+compliance_baseline:
+  snmp:
+    version_required: "v3"
+    community_string_banned: ["public", "private"]
+
+  ssh:
+    password_auth: false
+    key_auth: true
+
+  acl:
+    default_deny: true
+    logging: true

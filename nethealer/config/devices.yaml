@@ -1,0 +1,46 @@
+# 网络设备配置（MVP演示配置）
+devices:
+  - name: core-sw-01
+    vendor: huawei
+    ip: 192.168.1.1
+    type: switch
+    protocol: ssh
+    username: admin
+    password: "${DEVICE_PASSWORD}"
+    enable_password: "${ENABLE_PASSWORD}"
+    port: 22
+    critical: true
+    vlans: [10, 20, 30]
+
+  - name: edge-fw-01
+    vendor: h3c
+    ip: 192.168.1.2
+    type: firewall
+    protocol: ssh
+    username: admin
+    password: "${DEVICE_PASSWORD}"
+    port: 22
+    critical: true
+    zones: [trust, untrust, dmz]
+
+  - name: router-01
+    vendor: cisco
+    ip: 192.168.1.3
+    type: router
+    protocol: ssh
+    username: admin
+    password: "${DEVICE_PASSWORD}"
+    enable_password: "${ENABLE_PASSWORD}"
+    port: 22
+    critical: false
+    routing_protocols: [bgp, ospf]
+
+# 拓扑关系
+topology:
+  - from: router-01
+    to: edge-fw-01
+    link_type: routed
+
+  - from: edge-fw-01
+    to: core-sw-01
+    link_type: trunk
